@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dear Teacher Li ❤️</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Georgia', 'Noto Serif SC', 'STSong', serif;
+    cursor: default;
+    user-select: none;
+  }
+
+  /* ===== 背景图层 ===== */
+  .bg-image {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    filter: brightness(0.95);
+    transition: filter 0.8s ease;
+  }
+
+  /* 柔光叠加层 */
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(180, 114, 147, 0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(208, 103, 149, 0.12) 0%, transparent 55%),
+      radial-gradient(ellipse at 50% 80%, rgba(217, 170, 183, 0.18) 0%, transparent 60%);
+  }
+
+  /* ===== 粒子Canvas ===== */
+  #particleCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* ===== 光晕跟随鼠标 ===== */
+  .glow-cursor {
+    position: fixed;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 3;
+    background: radial-gradient(circle, rgba(253, 247, 253, 0.25) 0%, rgba(208, 103, 149, 0.08) 40%, transparent 70%);
+    transform: translate(-50%, -50%);
+    transition: opacity 0.5s ease;
+  }
+
+  /* ===== 内容层 ===== */
+  .content {
+    position: fixed;
+    z-index: 10;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+  }
+
+  /* ===== 打字机区域 ===== */
+  .typewriter-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .typewriter-line {
+    font-family: 'Georgia', 'Times New Roman', 'STSong', serif;
+    font-size: clamp(1.6rem, 3.5vw, 3.2rem);
+    color: #FDF7FD;
+    text-shadow:
+      0 0 18px rgba(208, 103, 149, 0.9),
+      0 0 50px rgba(180, 114, 147, 0.6),
+      0 0 90px rgba(180, 114, 147, 0.35),
+      0 2px 4px rgba(11, 6, 8, 0.5);
+    letter-spacing: 0.08em;
+    min-height: 1.3em;
+    white-space: nowrap;
+  }
+
+  .typewriter-line.line1 {
+    font-size: clamp(1.4rem, 2.8vw, 2.6rem);
+    letter-spacing: 0.1em;
+  }
+
+  .typewriter-line.line2 {
+    font-size: clamp(1.8rem, 4vw, 3.8rem);
+    font-weight: bold;
+    letter-spacing: 0.06em;
+    text-shadow:
+      0 0 25px rgba(208, 103, 149, 1),
+      0 0 60px rgba(208, 103, 149, 0.7),
+      0 0 110px rgba(180, 114, 147, 0.45),
+      0 0 160px rgba(180, 114, 147, 0.25),
+      0 2px 4px rgba(11, 6, 8, 0.5);
+  }
+
+  .typewriter-line.line3 {
+    font-size: clamp(1.2rem, 2.2vw, 2rem);
+    letter-spacing: 0.12em;
+    opacity: 0.9;
+  }
+
+  /* 光标 */
+  .typewriter-cursor {
+    display: inline-block;
+    width: 3px;
+    height: 1em;
+    background: #FDF7FD;
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    box-shadow: 0 0 8px rgba(253, 247, 253, 0.9), 0 0 20px rgba(208, 103, 149, 0.6);
+    animation: cursorBlink 0.7s step-end infinite;
+  }
+
+  .typewriter-cursor.hidden {
+    animation: none;
+    opacity: 0;
+  }
+
+  @keyframes cursorBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* 完成后的浮动动画 */
+  .typewriter-done {
+    animation: gentleFloat 4s ease-in-out infinite;
+  }
+
+  @keyframes gentleFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  /* 爱心特效 -- 打字完成后出现 */
+  .hearts-container {
+    position: fixed;
+    z-index: 11;
+    pointer-events: none;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .floating-heart {
+    position: absolute;
+    font-size: 1.5rem;
+    animation: heartRise 3.5s ease-out forwards;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @keyframes heartRise {
+    0% {
+      opacity: 0;
+      transform: translateY(0) scale(0.3) rotate(0deg);
+    }
+    15% {
+      opacity: 0.9;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-350px) scale(1.5) rotate(25deg);
+    }
+  }
+
+  /* ===== 底部提示 ===== */
+  .hint {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    color: rgba(253, 247, 253, 0.6);
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    animation: breathe 3s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes breathe {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.9; }
+  }
+
+  /* ===== 响应式 ===== */
+  @media (max-width: 768px) {
+    .glow-cursor { display: none; }
+    .typewriter-line.line1 { font-size: 1.2rem; }
+    .typewriter-line.line2 { font-size: 1.6rem; }
+    .typewriter-line.line3 { font-size: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- 背景图片 -->
+  <img class="bg-image"
+       src="6c748715891ae3a1a631aaa55ae32f4f.jpg"
+       alt="background"
+       draggable="false">
+
+  <!-- 柔光叠加 -->
+  <div class="overlay"></div>
+
+  <!-- 粒子动画画布 -->
+  <canvas id="particleCanvas"></canvas>
+
+  <!-- 鼠标光晕 -->
+  <div class="glow-cursor" id="glowCursor"></div>
+
+  <!-- 文字内容 - 打字机特效 -->
+  <div class="content">
+    <div class="typewriter-wrapper">
+      <div class="typewriter-line line1" id="typeLine1"></div>
+      <div class="typewriter-line line2" id="typeLine2"></div>
+      <div class="typewriter-line line3" id="typeLine3"></div>
+    </div>
+  </div>
+
+  <!-- 爱心容器 -->
+  <div class="hearts-container" id="heartsContainer"></div>
+
+  <!-- 底部提示 -->
+  <p class="hint">移动鼠标或触摸屏幕</p>
+
+<script>
+(function() {
+  // ============================================================
+  //  全局变量
+  // ============================================================
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  const glowEl = document.getElementById('glowCursor');
+  const bgImg = document.querySelector('.bg-image');
+
+  let W, H;
+  let mouseX = -500, mouseY = -500;
+  let targetMouseX = -500, targetMouseY = -500;
+  let mouseActive = false;
+  let particles = [];
+  let animationId;
+
+  // ============================================================
+  //  画布尺寸自适应
+  // ============================================================
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ============================================================
+  //  花瓣粒子类
+  // ============================================================
+  class Petal {
+    constructor(x, y, fromInteraction) {
+      this.reset(x, y, fromInteraction);
+    }
+
+    reset(x, y, fromInteraction) {
+      // 花瓣形状 (贝塞尔曲线模拟)
+      this.type = Math.floor(Math.random() * 3); // 0=圆瓣 1=尖瓣 2=心形瓣
+
+      // 颜色: 从图片调色板中取色
+      const palette = [
+        { r: 180, g: 114, b: 147 },  // #B47293 玫瑰粉
+        { r: 208, g: 103, b: 149 },  // #D06795 洋红粉
+        { r: 217, g: 170, b: 183 },  // #D9AAB7 淡粉
+        { r: 253, g: 247, b: 253 },  // #FDF7FD 近白粉
+        { r: 240, g: 140, b: 160 },  // 中间粉
+        { r: 200, g: 130, b: 155 },  // 柔和粉
+      ];
+      const c = palette[Math.floor(Math.random() * palette.length)];
+
+      this.x = x !== undefined ? x : Math.random() * W;
+      this.y = y !== undefined ? y : -40;
+      this.size = 6 + Math.random() * 18;
+
+      // 颜色
+      this.r = c.r;
+      this.g = c.g;
+      this.b = c.b;
+      this.alpha = 0.6 + Math.random() * 0.35;
+
+      // 运动参数
+      this.rotation = Math.random() * Math.PI * 2;
+      this.rotationSpeed = (Math.random() - 0.5) * 0.04;
+
+      // 下落速度
+      this.vy = 0.4 + Math.random() * 1.6;
+      this.vx = (Math.random() - 0.5) * 0.8;
+
+      // 摇摆幅度
+      this.swingAmp = 0.5 + Math.random() * 1.5;
+      this.swingSpeed = 0.01 + Math.random() * 0.03;
+      this.swingOffset = Math.random() * Math.PI * 2;
+
+      // 交互产生的粒子更活跃
+      if (fromInteraction) {
+        this.vy = -1.5 - Math.random() * 3.5;
+        this.vx = (Math.random() - 0.5) * 4;
+        this.life = 1;
+        this.decay = 0.003 + Math.random() * 0.012;
+        this.size = 4 + Math.random() * 10;
+        this.alpha = 0.7 + Math.random() * 0.3;
+      } else {
+        this.life = 1;
+        this.decay = 0;
+      }
+
+      // 闪烁
+      this.sparkle = Math.random() * Math.PI * 2;
+      this.sparkleSpeed = 0.02 + Math.random() * 0.06;
+    }
+
+    update() {
+      // 物理运动
+      this.vy += 0.005; // 微重力
+      this.y += this.vy;
+      this.x += this.vx + Math.sin(this.swingOffset + performance.now() * this.swingSpeed) * this.swingAmp;
+      this.rotation += this.rotationSpeed;
+      this.sparkle += this.sparkleSpeed;
+
+      // 交互粒子衰减
+      if (this.decay > 0) {
+        this.life -= this.decay;
+        this.alpha *= 0.995;
+      }
+
+      // 鼠标附近的粒子被吸引/排斥
+      if (mouseActive) {
+        const dx = this.x - mouseX;
+        const dy = this.y - mouseY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const influenceRadius = 150;
+
+        if (dist < influenceRadius && dist > 0) {
+          const force = (1 - dist / influenceRadius) * 2.5;
+          const angle = Math.atan2(dy, dx);
+          this.x += Math.cos(angle) * force;
+          this.y += Math.sin(angle) * force;
+          this.rotationSpeed += (Math.random() - 0.5) * 0.02;
+          // 靠近鼠标时微微发亮
+          this.alpha = Math.min(1, this.alpha + 0.02);
+        }
+      }
+
+      // 边界检查：超出底部或死亡则重生
+      if (this.y > H + 80 || this.x < -80 || this.x > W + 80 || this.life <= 0) {
+        if (this.decay > 0) {
+          return false; // 交互粒子消失
+        }
+        this.reset(undefined, -40, false);
+      }
+      return true;
+    }
+
+    draw(ctx) {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(this.rotation);
+
+      // 闪烁透明度
+      const sparkleAlpha = this.alpha * (0.85 + 0.15 * Math.sin(this.sparkle));
+      const alpha = this.decay > 0 ? this.alpha * this.life : sparkleAlpha;
+
+      // 绘制花瓣形状
+      ctx.beginPath();
+      const s = this.size;
+
+      switch (this.type) {
+        case 0: // 圆瓣
+          ctx.ellipse(0, -s * 0.3, s * 0.45, s * 0.7, 0, 0, Math.PI * 2);
+          break;
+        case 1: // 尖瓣 (水滴形)
+          ctx.moveTo(0, -s * 0.8);
+          ctx.bezierCurveTo(s * 0.5, -s * 0.2, s * 0.5, s * 0.4, 0, s * 0.5);
+          ctx.bezierCurveTo(-s * 0.5, s * 0.4, -s * 0.5, -s * 0.2, 0, -s * 0.8);
+          break;
+        case 2: // 心形瓣
+          ctx.moveTo(0, s * 0.4);
+          ctx.bezierCurveTo(-s * 0.5, -s * 0.1, -s * 0.5, -s * 0.6, 0, -s * 0.2);
+          ctx.bezierCurveTo(s * 0.5, -s * 0.6, s * 0.5, -s * 0.1, 0, s * 0.4);
+          break;
+      }
+
+      // 渐变填充
+      const grad = ctx.createRadialGradient(0, -s * 0.1, s * 0.05, 0, 0, s * 0.6);
+      grad.addColorStop(0, `rgba(${this.r + 30}, ${this.g + 20}, ${this.b + 20}, ${alpha})`);
+      grad.addColorStop(0.5, `rgba(${this.r}, ${this.g}, ${this.b}, ${alpha})`);
+      grad.addColorStop(1, `rgba(${this.r - 20}, ${this.g - 15}, ${this.b - 10}, ${alpha * 0.4})`);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // 边缘光晕
+      ctx.shadowColor = `rgba(${this.r}, ${this.g}, ${this.b}, ${alpha * 0.6})`;
+      ctx.shadowBlur = s * 0.4;
+
+      ctx.restore();
+    }
+  }
+
+  // ============================================================
+  //  光粒子（微小的闪烁点）
+  // ============================================================
+  class SparkParticle {
+    constructor() {
+      this.reset();
+    }
+    reset() {
+      this.x = Math.random() * W;
+      this.y = Math.random() * H;
+      this.size = 0.5 + Math.random() * 2.5;
+      this.baseAlpha = 0 + Math.random() * 0.5;
+      this.alpha = this.baseAlpha;
+      this.twinkleSpeed = 0.01 + Math.random() * 0.05;
+      this.twinkleOffset = Math.random() * Math.PI * 2;
+    }
+    update() {
+      this.alpha = this.baseAlpha * (0.5 + 0.5 * Math.sin(this.twinkleOffset + performance.now() * this.twinkleSpeed));
+      return true;
+    }
+    draw(ctx) {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(253, 247, 253, ${this.alpha})`;
+      ctx.fill();
+      // 光晕
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size * 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(253, 247, 253, ${this.alpha * 0.25})`;
+      ctx.fill();
+    }
+  }
+
+  // ============================================================
+  //  初始化粒子
+  // ============================================================
+  function initParticles() {
+    particles = [];
+    // 花瓣
+    for (let i = 0; i < 80; i++) {
+      particles.push(new Petal(undefined, Math.random() * H, false));
+    }
+    // 光点
+    for (let i = 0; i < 50; i++) {
+      particles.push(new SparkParticle());
+    }
+  }
+  initParticles();
+  window.addEventListener('resize', () => {
+    // 粒子适应新画布
+    particles.forEach(p => {
+      if (p.x > W) p.x = W;
+      if (p.y > H) p.y = H;
+    });
+  });
+
+  // ============================================================
+  //  鼠标交互爆发花瓣
+  // ============================================================
+  function burstPetals(x, y, count) {
+    for (let i = 0; i < count; i++) {
+      const offsetX = (Math.random() - 0.5) * 60;
+      const offsetY = (Math.random() - 0.5) * 60;
+      particles.push(new Petal(x + offsetX, y + offsetY, true));
+    }
+    // 限制粒子总数
+    while (particles.filter(p => p.decay > 0).length > 200) {
+      const idx = particles.findIndex(p => p.decay > 0);
+      if (idx >= 0) particles.splice(idx, 1);
+    }
+  }
+
+  // ============================================================
+  //  鼠标/触摸事件
+  // ============================================================
+  let clickThrottle = 0;
+
+  document.addEventListener('mousemove', (e) => {
+    targetMouseX = e.clientX;
+    targetMouseY = e.clientY;
+    mouseActive = true;
+
+    // 鼠标移动时偶尔产生花瓣
+    if (Math.random() < 0.08) {
+      particles.push(new Petal(e.clientX, e.clientY, true));
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    const now = performance.now();
+    if (now - clickThrottle < 200) return;
+    clickThrottle = now;
+    burstPetals(e.clientX, e.clientY, 12 + Math.floor(Math.random() * 15));
+  });
+
+  document.addEventListener('touchmove', (e) => {
+    const touch = e.touches[0];
+    targetMouseX = touch.clientX;
+    targetMouseY = touch.clientY;
+    mouseActive = true;
+  }, { passive: true });
+
+  document.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    targetMouseX = touch.clientX;
+    targetMouseY = touch.clientY;
+    mouseActive = true;
+    burstPetals(touch.clientX, touch.clientY, 15);
+  }, { passive: true });
+
+  document.addEventListener('mouseleave', () => {
+    mouseActive = false;
+    glowEl.style.opacity = '0';
+  });
+
+  document.addEventListener('mouseenter', () => {
+    mouseActive = true;
+    glowEl.style.opacity = '1';
+  });
+
+  // ============================================================
+  //  主循环
+  // ============================================================
+  function animate(timestamp) {
+    animationId = requestAnimationFrame(animate);
+
+    // 平滑鼠标跟随
+    mouseX += (targetMouseX - mouseX) * 0.12;
+    mouseY += (targetMouseY - mouseY) * 0.12;
+
+    // 更新光晕位置
+    glowEl.style.left = mouseX + 'px';
+    glowEl.style.top = mouseY + 'px';
+
+    // 清屏
+    ctx.clearRect(0, 0, W, H);
+
+    // 更新和绘制粒子
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const alive = particles[i].update();
+      if (!alive) {
+        particles.splice(i, 1);
+      } else {
+        particles[i].draw(ctx);
+      }
+    }
+
+    // 动态补充花瓣（保持最小数量）
+    const fallingPetals = particles.filter(p => p instanceof Petal && p.decay === 0).length;
+    if (fallingPetals < 60) {
+      particles.push(new Petal(undefined, -40, false));
+    }
+  }
+
+  // ============================================================
+  //  启动
+  // ============================================================
+  resize();
+  initParticles();
+  animate(0);
+
+  // ============================================================
+  //  打字机特效
+  // ============================================================
+  const typewriterTexts = [
+    { el: document.getElementById('typeLine1'), text: 'Dear Teacher Li,', speed: 80, delay: 600 },
+    { el: document.getElementById('typeLine2'), text: 'I Love You',          speed: 100, delay: 2200 },
+    { el: document.getElementById('typeLine3'), text: '❤  Forever  ❤',      speed: 120, delay: 3800 },
+  ];
+
+  let typewriterDone = false;
+  let activeCursors = [];
+
+  function createCursorFor(el) {
+    const cursor = document.createElement('span');
+    cursor.className = 'typewriter-cursor';
+    cursor.textContent = '';
+    el.appendChild(cursor);
+    return cursor;
+  }
+
+  function typeText(lineObj, cursorEl) {
+    const { el, text, speed, delay } = lineObj;
+    let charIndex = 0;
+    el.textContent = '';
+
+    setTimeout(() => {
+      const interval = setInterval(() => {
+        if (charIndex < text.length) {
+          el.textContent += text[charIndex];
+          charIndex++;
+        } else {
+          clearInterval(interval);
+          // 检查是否所有行都已完成
+          const allDone = typewriterTexts.every(t => t.el.textContent.length >= t.text.length);
+          if (allDone && !typewriterDone) {
+            typewriterDone = true;
+            onTypewriterComplete();
+          }
+        }
+      }, speed);
+    }, delay);
+  }
+
+  function onTypewriterComplete() {
+    // 移除所有光标
+    activeCursors.forEach(c => c.classList.add('hidden'));
+    activeCursors = [];
+
+    // 为每一行添加浮动动画
+    typewriterTexts.forEach(t => {
+      t.el.classList.add('typewriter-done');
+    });
+
+    // 发射爱心雨
+    spawnHeartRain();
+  }
+
+  // ============================================================
+  //  爱心雨特效
+  // ============================================================
+  function spawnHeartRain() {
+    const container = document.getElementById('heartsContainer');
+    const heartEmojis = ['💕', '💖', '💗', '💝', '💘', '🌸', '✨', '💐', '🩷', '🌷'];
+
+    function createHeart() {
+      const heart = document.createElement('span');
+      heart.className = 'floating-heart';
+      heart.textContent = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+      heart.style.left = (5 + Math.random() * 90) + '%';
+      heart.style.bottom = (Math.random() * 30) + '%';
+      heart.style.fontSize = (1 + Math.random() * 2.5) + 'rem';
+      heart.style.animationDuration = (2.5 + Math.random() * 4) + 's';
+      heart.style.animationDelay = '0s';
+      container.appendChild(heart);
+
+      // 动画结束后移除
+      heart.addEventListener('animationend', () => {
+        heart.remove();
+      });
+    }
+
+    // 初始爆发
+    for (let i = 0; i < 25; i++) {
+      setTimeout(() => createHeart(), i * 60);
+    }
+
+    // 持续生成
+    let heartInterval = setInterval(() => {
+      if (document.hidden) return;
+      createHeart();
+    }, 400);
+
+    // 生成30秒后降低频率
+    setTimeout(() => {
+      clearInterval(heartInterval);
+      heartInterval = setInterval(() => {
+        if (document.hidden) return;
+        createHeart();
+      }, 1500);
+    }, 30000);
+  }
+
+  // 启动打字机
+  typewriterTexts.forEach((lineObj) => {
+    const cursor = createCursorFor(lineObj.el);
+    activeCursors.push(cursor);
+    typeText(lineObj, cursor);
+  });
+
+  console.log('🌸 梦幻花境已就绪 - 打字机特效即将开始');
+})();
+</script>
+
+</body>
+</html>
